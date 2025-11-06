@@ -1,0 +1,6 @@
+emotions.csv
+*.joblib
+__pycache__
+.venv
+
+*.xlsx
