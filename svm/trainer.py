@@ -3,7 +3,7 @@ from svm.hyperparameter import model
 import joblib
 from datetime import datetime
 
-from evaluator import evaluation
+from pipeline import evaluation
 
 def train_test(feature_train, feature_test, label_train, label_test):
     """
