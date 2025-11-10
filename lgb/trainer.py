@@ -2,7 +2,7 @@ from lgb.hyperparameter import model
 from datetime import datetime
 
 import joblib
-from evaluator import evaluation
+from pipeline import evaluation
 
 def train_test(feature_train, feature_test, feature_val, label_train, label_test, label_val):
     """

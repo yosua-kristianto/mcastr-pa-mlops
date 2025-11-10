@@ -14,29 +14,44 @@ in the model building process.
 7. Model Saving
 
 """
-import argparse
+
+from dotenv import load_dotenv
+from pipeline import updateKnowledge, load_data, preprocess_data, token_vectorize, data_segmentation
+from config import Log
 
 def main():
-    ""
+    load_dotenv()
+
+    updateKnowledge()
+    Log.i("Knowledge base update successfully, starting data fetching and normalization.")
     
+    data = load_data()
+    data = preprocess_data(data)
+    data = token_vectorize(data)
+
+    # Hardcode bentar
+    model = "svc"
+
+    feature_train, feature_test, label_train, label_test, feature_val, label_val = data_segmentation(data, (True if model != "svc" else False))
+
+    if(model == "svc"):
+        from svm.trainer import train_test
+        train_test(feature_train, feature_test, label_train, label_test)
+    elif(model == "lightgbm"):
+        from lgb.trainer import train_test
+        train_test(feature_train, feature_test, feature_val, label_train, label_test, label_val)
+        
+    Log.i(f"Model {model} training and evaluation completed successfully.")
 
 if __name__ == "__main__":
     from datetime import datetime
 
     print(f"""
-    __       __             ______               __                      __       __  __         ______                      
-/  \     /  |           /      \             /  |                    /  \     /  |/  |       /      \                     
-$$  \   /$$ |  _______ /$$$$$$  |  _______  _$$ |_     ______        $$  \   /$$ |$$ |      /$$$$$$  |  ______    _______ 
-$$$  \ /$$$ | /       |$$ |__$$ | /       |/ $$   |   /      \       $$$  \ /$$$ |$$ |      $$ |  $$ | /      \  /       |
-$$$$  /$$$$ |/$$$$$$$/ $$    $$ |/$$$$$$$/ $$$$$$/   /$$$$$$  |      $$$$  /$$$$ |$$ |      $$ |  $$ |/$$$$$$  |/$$$$$$$/ 
-$$ $$ $$/$$ |$$ |      $$$$$$$$ |$$      \   $$ | __ $$ |  $$/       $$ $$ $$/$$ |$$ |      $$ |  $$ |$$ |  $$ |$$      \ 
-$$ |$$$/ $$ |$$ \_____ $$ |  $$ | $$$$$$  |  $$ |/  |$$ |            $$ |$$$/ $$ |$$ |_____ $$ \__$$ |$$ |__$$ | $$$$$$  |
-$$ | $/  $$ |$$       |$$ |  $$ |/     $$/   $$  $$/ $$ |            $$ | $/  $$ |$$       |$$    $$/ $$    $$/ /     $$/ 
-$$/      $$/  $$$$$$$/ $$/   $$/ $$$$$$$/     $$$$/  $$/             $$/      $$/ $$$$$$$$/  $$$$$$/  $$$$$$$/  $$$$$$$/  
-                                                                                                      $$ |                
-                                                                                                      $$ |                
-                                                                                                      $$/                 
-    
+                                                          
+|     |___|  _  |___| |_ ___   |     |  |  |     |___ ___ 
+| | | |  _|     |_ -|  _|  _|  | | | |  |__|  |  | . |_ -|
+|_|_|_|___|__|__|___|_| |_|    |_|_|_|_____|_____|  _|___|
+                                                 |_|          
     Session {datetime.now()}
     """)
 

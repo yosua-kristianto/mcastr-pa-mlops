@@ -3,28 +3,30 @@ This file contains the data loading process. If from main being put args
 
 """
 import pandas
+from config import Log
 
-def load_data(env: str):
-    """This function loads the `emotions.csv` dataset and prints the 
+def load_data() -> pandas.DataFrame:
+    from sqlalchemy import select
+    from model import Knowledge
+    from config import databaseConnection
+    """This function loads the knowledge table data from the database and prints the 
     first few rows and the count of each column.
-    
-    If the env is set to 'debug', it this function will trim the dataset
-    to only 20 rows.
 
-    Args:
-        env (str): The environment setting, e.g., 'debug'.
     Returns:
         DataFrame: The loaded dataset as a pandas DataFrame.
     """
-    # The used dataset is from https://www.kaggle.com/datasets/adhamelkomy/twitter-emotion-dataset
-    dataframe = pandas.read_csv('emotions.csv')
+    session = databaseConnection()
 
-    # Testing Data Loader for Debugging.
-    if(env == 'debug'):
-        dataframe = dataframe.sample(n=100000, random_state=42).reset_index(drop=True)
+    stmt = select(Knowledge.prompt, Knowledge.label).where(Knowledge.deleted_at == None)
+    results = session.execute(stmt).fetchall()
+
+    # --- Convert to Pandas DataFrame ---
+    dataframe = pandas.DataFrame(results, columns=["prompt", "label"])
+    session.close()
 
     print(dataframe.head())
-    print(f"Count {dataframe.count()}")
+
+    Log.i(f"Data to be used for this session : {dataframe.count()}")
 
     return dataframe
 
@@ -59,7 +61,7 @@ def preprocess_data(dataframe: pandas.DataFrame) -> pandas.DataFrame:
     stop_words = set(stopwords.words("english"))
 
     processed_texts = []
-    for text in tqdm(dataframe["text"], desc="Preprocessing text", unit="rows"):
+    for text in tqdm(dataframe["prompt"], desc="Preprocessing text", unit="rows"):
         # 1. Lowercase
         text = text.lower()
 
@@ -79,7 +81,7 @@ def preprocess_data(dataframe: pandas.DataFrame) -> pandas.DataFrame:
     dataframe = dataframe.copy()
     dataframe["text"] = processed_texts
 
-    print("Pre Processing complete. Sample head:")
+    Log.i(f"Data normalization completed.")
     print(dataframe.head())
 
     return dataframe
@@ -96,8 +98,8 @@ def token_vectorize(dataframe: pandas.DataFrame) -> pandas.DataFrame:
     """
     from tqdm import tqdm
     from sklearn.feature_extraction.text import HashingVectorizer
-    if "text" not in dataframe.columns:
-        raise ValueError("DataFrame must contain a 'text' column")
+    if "prompt" not in dataframe.columns:
+        raise ValueError("DataFrame must contain a 'prompt' column")
 
     # Step 1: Tokenization progress (trivial with sklearn, but simulate with tqdm)
     tqdm.pandas(desc="Tokenizing (uni+bi+trigrams)")
@@ -112,7 +114,7 @@ def token_vectorize(dataframe: pandas.DataFrame) -> pandas.DataFrame:
 
     # Step 3: Vectorization with tqdm
     vectors = []
-    for text in tqdm(dataframe["text"], desc="Vectorizing with HashingVectorizer", unit="rows"):
+    for text in tqdm(dataframe["prompt"], desc="Vectorizing with HashingVectorizer", unit="rows"):
         vec = vectorizer.transform([text])
         vectors.append(vec)
 
@@ -120,7 +122,7 @@ def token_vectorize(dataframe: pandas.DataFrame) -> pandas.DataFrame:
     dataframe = dataframe.copy()
     dataframe["vectorized"] = vectors
 
-    print("Vectorization complete. Sample head:")
+    Log.i(f"Data vectorization completed")
     print(dataframe.head())
     
     return dataframe
@@ -152,10 +154,16 @@ def data_segmentation(dataframe: pandas.DataFrame, valset: bool = False):
         X, y, test_size=test_size, random_state=42, stratify=y
     )
 
+    X_val = None
+    y_val = None
+
     if(valset):
         X_test, X_val, y_test, y_val = train_test_split(
             X_test, y_test, test_size=0.5, random_state=42, stratify=y_test
         )
 
+    Log.i(f"Created train/test sets with sizes: "
+          f"train={X_train.shape[0]}, test={X_test.shape[0]}, "
+          f"val={X_val.shape[0] if X_val is not None else 'N/A'}")
 
     return X_train, X_test, y_train, y_test, X_val, y_val
