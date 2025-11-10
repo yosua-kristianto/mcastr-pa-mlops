@@ -17,13 +17,13 @@ in the model building process.
 
 from dotenv import load_dotenv
 from pipeline import updateKnowledge, load_data, preprocess_data, token_vectorize, data_segmentation
+from config import Log
 
 def main():
     load_dotenv()
 
     updateKnowledge()
-    print("[INFO] Knowledge base updated successfully.")
-    print("[INFO] Starting data fetching and normalization.")
+    Log.i("Knowledge base update successfully, starting data fetching and normalization.")
     
     data = load_data()
     data = preprocess_data(data)
@@ -41,8 +41,7 @@ def main():
         from lgb.trainer import train_test
         train_test(feature_train, feature_test, feature_val, label_train, label_test, label_val)
         
-
-    print("[INFO] Model building process completed.")
+    Log.i(f"Model {model} training and evaluation completed successfully.")
 
 if __name__ == "__main__":
     from datetime import datetime

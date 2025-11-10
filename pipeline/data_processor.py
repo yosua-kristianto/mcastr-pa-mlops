@@ -3,7 +3,7 @@ This file contains the data loading process. If from main being put args
 
 """
 import pandas
-
+from config import Log
 
 def load_data() -> pandas.DataFrame:
     from sqlalchemy import select
@@ -22,11 +22,11 @@ def load_data() -> pandas.DataFrame:
 
     # --- Convert to Pandas DataFrame ---
     dataframe = pandas.DataFrame(results, columns=["prompt", "label"])
-
     session.close()
 
     print(dataframe.head())
-    print(f"Count {dataframe.count()}")
+
+    Log.i(f"Data to be used for this session : {dataframe.count()}")
 
     return dataframe
 
@@ -81,7 +81,7 @@ def preprocess_data(dataframe: pandas.DataFrame) -> pandas.DataFrame:
     dataframe = dataframe.copy()
     dataframe["text"] = processed_texts
 
-    print("Pre Processing complete. Sample head:")
+    Log.i(f"Data normalization completed.")
     print(dataframe.head())
 
     return dataframe
@@ -122,7 +122,7 @@ def token_vectorize(dataframe: pandas.DataFrame) -> pandas.DataFrame:
     dataframe = dataframe.copy()
     dataframe["vectorized"] = vectors
 
-    print("Vectorization complete. Sample head:")
+    Log.i(f"Data vectorization completed")
     print(dataframe.head())
     
     return dataframe
@@ -162,5 +162,8 @@ def data_segmentation(dataframe: pandas.DataFrame, valset: bool = False):
             X_test, y_test, test_size=0.5, random_state=42, stratify=y_test
         )
 
+    Log.i(f"Created train/test sets with sizes: "
+          f"train={X_train.shape[0]}, test={X_test.shape[0]}, "
+          f"val={X_val.shape[0] if X_val is not None else 'N/A'}")
 
     return X_train, X_test, y_train, y_test, X_val, y_val

@@ -5,6 +5,8 @@ from datetime import date
 
 from sqlalchemy import func
 
+from config import Log
+
 def updateKnowledge():
     session = databaseConnection()
 
@@ -13,7 +15,7 @@ def updateKnowledge():
         knowledge_count = session.query(func.count(Knowledge.id)).filter(Knowledge.deleted_at == None).scalar()
 
         if knowledge_count == 0:
-            print("[INFO] Knowledge table empty. Loading initial data from emotions.csv...")
+            Log.i("Knowledge table is empty. Loading initial data from emotions.csv")
             data_frame = pandas.read_csv("emotions.csv")
 
             records = [
@@ -27,10 +29,9 @@ def updateKnowledge():
 
             session.add_all(records)
             session.commit()
-            print(f"[INFO] Inserted {len(records)} records from CSV File.")
-
+            Log.i("Successfully initialized knowledge table with data from emotions.csv")
         else:
-            print("[INFO] Knowledge table already has data. Checking today's model logs...")
+            Log.i("Checking today's model logs")
             today = date.today()
 
             logs = (
@@ -43,7 +44,7 @@ def updateKnowledge():
             )
 
             if not logs:
-                print("[INFO] No new model logs for today.")
+                Log.i("No new model logs found for today. Skipping knowledge update.")
             else:
                 new_records = []
                 for log in logs:
@@ -58,11 +59,10 @@ def updateKnowledge():
 
                 session.add_all(new_records)
                 session.commit()
-                print(f"[INFO] Inserted {len(new_records)} new knowledge entries from today's logs.")
-
+                Log.i(f"Inserted {len(new_records)} new knowledge entries from today's logs.")
     except Exception as e:
         session.rollback()
-        print(f"[ERROR] {e}")
+        Log.e(e)
     finally:
         session.close()
         print("[INFO] Database session closed.")

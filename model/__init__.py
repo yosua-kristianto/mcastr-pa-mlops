@@ -1,6 +1,7 @@
-from .entities import Knowledge, ModelLog
+from .entities import Knowledge, ModelLog, ModelVersion
 
 __all__ = [
     "Knowledge",
-    "ModelLog"
+    "ModelLog",
+    "ModelVersion"
 ]
