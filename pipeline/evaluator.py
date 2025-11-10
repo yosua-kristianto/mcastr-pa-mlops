@@ -5,7 +5,8 @@ from openpyxl.utils import get_column_letter
 import pandas as pd
 import numpy as np
 from datetime import datetime
-
+from model import ModelVersion
+from config import databaseConnection, Log
 
 def evaluation(model, model_name, time_between, feature_test, label_test):
     """
@@ -25,14 +26,36 @@ def evaluation(model, model_name, time_between, feature_test, label_test):
     minutes = (time_between % 3600) // 60
     seconds = time_between % 60
 
-    print("\n=== Evaluation Results ===")
-    print(f"Accuracy: {accuracy:.4f}")
-    print("\nConfusion Matrix:\n", conf_matrix)
-    print("\nClassification Report:\n", class_report_str)
+    Log.i(f"""
+    === Evaluation Results ===  
+    Accuracy: {accuracy:.4f}
+    Confusion Matrix: {conf_matrix}
+    Classification Report: {class_report_str}
+    """)
+
+    session = databaseConnection()
+    latest_model_version = session.query(ModelVersion).order_by(ModelVersion.created_at.desc()).first()
+
+    new_version = ModelVersion(model_name=model_name, eval_score=accuracy)
+
+    if(not latest_model_version is None):
+        if(accuracy > latest_model_version.eval_score):
+            Log.i(f"New model version {model_name} has better accuracy than the latest version -> {accuracy} > {latest_model_version.eval_score}")
+            
+            session.add(new_version)
+            session.commit()
+        else:
+            Log.i(f"THe new model version {model_name} has poorer accuracy than the latest version -> {accuracy} < {latest_model_version.eval_score}")
+    else:
+        Log.i(f"No previous model version found. Adding new version {model_name} with accuracy {accuracy:.4f}.")
+        session.add(new_version)
+        session.commit()
+
+    session.close()
 
     # === Excel Export ===
     timestamp = datetime.now()
-    excel_filename = f"report-{model_name}-{timestamp.strftime('%Y%m%d-%H%M%S')}.xlsx"
+    excel_filename = f"evaluation-report/report-{model_name}-{timestamp.strftime('%Y%m%d-%H%M%S')}.xlsx"
 
     wb = Workbook()
     ws = wb.active
@@ -143,4 +166,4 @@ def evaluation(model, model_name, time_between, feature_test, label_test):
 
     # Save workbook
     wb.save(excel_filename)
-    print(f"[INFO] Report saved to {excel_filename}")
+    Log.i(f"Report saved to {excel_filename}")

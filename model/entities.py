@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, String, Text, SmallInteger,
+    Column, String, Text, SmallInteger, Float, LargeBinary,
     TIMESTAMP, func
 )
 from sqlalchemy.orm import declarative_base
@@ -26,6 +26,16 @@ class ModelLog(Base):
     prompt = Column(Text, nullable=False)
     model_output = Column(SmallInteger, nullable=False)
     feedback_actual_output = Column(SmallInteger, nullable=True)
+    created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
+    updated_at = Column(TIMESTAMP, nullable=True)
+    deleted_at = Column(TIMESTAMP, nullable=True)
+
+class ModelVersion(Base):
+    __tablename__ = "mlops_tbl_version"
+
+    model_name = Column(String(60), primary_key=True)
+    eval_score = Column(Float, nullable=True)
+    report = Column(LargeBinary, nullable=True)
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=True)
     deleted_at = Column(TIMESTAMP, nullable=True)
