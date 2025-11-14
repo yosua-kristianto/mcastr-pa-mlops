@@ -62,7 +62,7 @@ def updateKnowledge():
                 Log.i(f"Inserted {len(new_records)} new knowledge entries from today's logs.")
     except Exception as e:
         session.rollback()
-        Log.e(e)
+        Log.e(str(e))
     finally:
         session.close()
         print("[INFO] Database session closed.")
