@@ -11,6 +11,8 @@ class Log:
         File name is current time session with format of [McAstr MLOps - Session Ymd H:i]
         """
         log_path = "logs/" + "McAstr MLOps - Session" + time.strftime("%Y%m%d") + ".log";
+
+        operation = "x"
         
         if(Path(log_path).is_file()):
             operation = "a"
