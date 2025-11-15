@@ -53,7 +53,7 @@ Follow guide within readme.md for database setup, and run the migration from the
 7. Initializing knowledge
 
 The implementation of this project, uses knowledge from [adhamelkomy's kaggle repository.](https://www.kaggle.com/datasets/adhamelkomy/twitter-emotion-dataset)
-Download the emotion.csv in the root of this project.
+Download the emotion.csv and place the file to the root of this project.
 
 8. Running the Project
 
