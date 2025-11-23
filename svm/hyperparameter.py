@@ -1,8 +1,7 @@
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.model_selection import GridSearchCV
 
-model = SVC(
-    kernel="linear",  
+model = LinearSVC(
     C=10.0,            
     class_weight='balanced',
     max_iter=5000,    
