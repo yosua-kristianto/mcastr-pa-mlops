@@ -30,8 +30,16 @@ def train_test(feature_train, feature_test, label_train, label_test):
     between = int((timestamp - start_timestamp).total_seconds())
 
     model_name = f"svm-{timestamp.strftime("%Y%m%d-%H%M%S")}"
+
+    from sklearn.pipeline import Pipeline
+    from vectorizer import vectorizer
+    pipeline = Pipeline([
+        ("vectorizer", vectorizer), 
+        ("model", model)
+    ])
+
     filename = f"model-backup/{model_name}.joblib"
-    joblib.dump(model, filename)
+    joblib.dump(pipeline, filename)
 
     Log.i(f"Model saved to {filename}. Starting evaluation...")    
     evaluation(model, model_name, between, feature_test, label_test)
