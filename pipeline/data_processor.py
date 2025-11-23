@@ -98,19 +98,18 @@ def token_vectorize(dataframe: pandas.DataFrame) -> pandas.DataFrame:
     """
     from tqdm import tqdm
     from sklearn.feature_extraction.text import HashingVectorizer
+    
     if "prompt" not in dataframe.columns:
         raise ValueError("DataFrame must contain a 'prompt' column")
 
     # Step 1: Tokenization progress (trivial with sklearn, but simulate with tqdm)
     tqdm.pandas(desc="Tokenizing (uni+bi+trigrams)")
+
+    
     
     # Step 2: Initialize HashingVectorizer
-    vectorizer = HashingVectorizer(
-        ngram_range=(1, 3),    # unigrams + bigrams + trigrams
-        analyzer="word",
-        alternate_sign=False,  # keep values non-negative
-        n_features=2**18       # number of features (adjust as needed)
-    )
+    from vectorizer import vectorizer
+
 
     # Step 3: Vectorization with tqdm
     vectors = []
